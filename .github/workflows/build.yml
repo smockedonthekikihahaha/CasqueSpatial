@@ -1,0 +1,33 @@
+name: Compiler le VST3
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurer
+        shell: bash
+        run: |
+          if [ "${{ runner.os }}" = "macOS" ]; then
+            cmake -B build -DCOPY_AFTER_BUILD=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+          else
+            cmake -B build -DCOPY_AFTER_BUILD=OFF
+          fi
+
+      - name: Compiler
+        run: cmake --build build --config Release --parallel
+
+      - name: Envoyer le plugin
+        uses: actions/upload-artifact@v4
+        with:
+          name: CasqueSpatial-${{ runner.os }}
+          path: build/CasqueSpatial_artefacts
